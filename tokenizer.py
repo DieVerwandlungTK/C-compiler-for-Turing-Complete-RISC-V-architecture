@@ -7,8 +7,8 @@ class TokenType(Enum):
     TK_EOF = 2
 
 class Token():
-    def __init__(self, token_type: TokenType, token_str: str, val = None) -> None:
-        self.token_type = token_type
+    def __init__(self, type: TokenType, token_str: str, val = None) -> None:
+        self.type = type
         self.val = val
         self.token_str = token_str
 
@@ -44,19 +44,19 @@ class Tokenizer():
         self.tokens.append(Token(TokenType.TK_EOF, ""))
     
     def consume(self, op: str) -> bool:
-        if self.tokens[0].token_type != TokenType.TK_RESERVED or self.tokens[0].token_str != op:
+        if self.tokens[0].type != TokenType.TK_RESERVED or self.tokens[0].token_str != op:
             return False
         self.tokens.pop(0)
         return True
     
     def expect(self, op: str) -> None:
-        if self.tokens[0].token_type != TokenType.TK_RESERVED or self.tokens[0].token_str != op:
+        if self.tokens[0].type != TokenType.TK_RESERVED or self.tokens[0].token_str != op:
             print(f"Expected {op} but got {self.tokens[0].token_str}.", file=sys.stderr)
             sys.exit(1)
         self.tokens.pop(0)
     
     def expect_number(self) -> int:
-        if self.tokens[0].token_type != TokenType.TK_NUM:
+        if self.tokens[0].type != TokenType.TK_NUM:
             print(f"Expected a number but got {self.tokens[0].token_str}.", file=sys.stderr)
             sys.exit(1)
         val = self.tokens[0].val
@@ -64,7 +64,7 @@ class Tokenizer():
         return val
     
     def at_eof(self) -> bool:
-        return self.tokens[0].token_type == TokenType.TK_EOF
+        return self.tokens[0].type == TokenType.TK_EOF
 
         
         

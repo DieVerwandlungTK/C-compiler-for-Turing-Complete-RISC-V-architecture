@@ -38,7 +38,7 @@ if __name__ == "__main__":
                 f.write(f"a0, a0, t0\n")
                 continue
 
-            if tokenizer.tokens[0].token_type == TokenType.TK_NUM:
+            if tokenizer.tokens[0].type == TokenType.TK_NUM:
                 f.write(" li ")
                 f.write(f"a0, {tokenizer.expect_number()}\n")
                 continue
