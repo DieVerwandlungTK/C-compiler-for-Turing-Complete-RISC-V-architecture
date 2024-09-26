@@ -41,6 +41,16 @@ if __name__ == "__main__":
                 bin += "00100"
                 bin += "11"
             
+            if toks[0] == "add":
+                bin += "00000"
+                bin += "00"
+                bin += f"{REGISTER_MAP[toks[3]]}"
+                bin += f"{REGISTER_MAP[toks[2]]}"
+                bin += "000"
+                bin += REGISTER_MAP[toks[1]]
+                bin += "01100"
+                bin += "11"
+            
             if toks[0] == "sub":
                 bin += "01000"
                 bin += "00"

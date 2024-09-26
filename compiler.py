@@ -66,7 +66,7 @@ class Compiler():
             
             else:
                 sys.exit(1)
-        
+            f.write("\n")
         _recursive_compile(node)
         f.write("   ret\n")
         f.close()
