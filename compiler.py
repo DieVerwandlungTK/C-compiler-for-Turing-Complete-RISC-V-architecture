@@ -17,11 +17,11 @@ class Compiler():
             if node.node_type == NodeType.ND_ADD:
                 _recursive_compile(node.rhs)
                 _recursive_compile(node.lhs)
-                f.write("   lw t0, 0(sp)\n")
                 f.write("   li t2, 4\n")
                 f.write("   sub sp, sp, t2\n")
-                f.write("   lw t1, 0(sp)\n")
+                f.write("   lw t0, 0(sp)\n")
                 f.write("   sub sp, sp, t2\n")
+                f.write("   lw t1, 0(sp)\n")
                 f.write("   add t0, t0, t1\n")
                 f.write("   sw t0, 0(sp)\n")
                 f.write("   addi sp, sp, 4\n")
@@ -29,11 +29,11 @@ class Compiler():
             elif node.node_type == NodeType.ND_SUB:
                 _recursive_compile(node.rhs)
                 _recursive_compile(node.lhs)
-                f.write("   lw t0, 0(sp)\n")
                 f.write("   li t2, 4\n")
                 f.write("   sub sp, sp, t2\n")
-                f.write("   lw t1, 0(sp)\n")
+                f.write("   lw t0, 0(sp)\n")
                 f.write("   sub sp, sp, t2\n")
+                f.write("   lw t1, 0(sp)\n")
                 f.write("   sub t0, t0, t1\n")
                 f.write("   sw t0, 0(sp)\n")
                 f.write("   addi sp, sp, 4\n")
@@ -41,21 +41,21 @@ class Compiler():
             elif node.node_type == NodeType.ND_MUL:
                 _recursive_compile(node.rhs)
                 _recursive_compile(node.lhs)
-                f.write("   lw t0, 0(sp)\n")
                 f.write("   li t2, 4\n")
                 f.write("   sub sp, sp, t2\n")
-                f.write("   lw t1, 0(sp)\n")
+                f.write("   lw t0, 0(sp)\n")
                 f.write("   sub sp, sp, t2\n")
+                f.write("   lw t1, 0(sp)\n")
                 # hoge
             
             elif node.node_type == NodeType.ND_DIV:
                 _recursive_compile(node.rhs)
                 _recursive_compile(node.lhs)
-                f.write("   lw t0, 0(sp)\n")
                 f.write("   li t2, 4\n")
                 f.write("   sub sp, sp, t2\n")
-                f.write("   lw t1, 0(sp)\n")
+                f.write("   lw t0, 0(sp)\n")
                 f.write("   sub sp, sp, t2\n")
+                f.write("   lw t1, 0(sp)\n")
                 # fuga
             
             elif node.node_type == NodeType.ND_NUM:
