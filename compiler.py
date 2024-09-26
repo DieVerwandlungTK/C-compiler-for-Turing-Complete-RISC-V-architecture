@@ -1,18 +1,7 @@
 import sys
 from tokenizer import Tokenizer, TokenType
 from syntax_tree import Parser, Node, NodeType
-
-def strtol(s: str) -> tuple[int, str]:
-    n = 0
-    cnt = 0
-    for i, c in enumerate(s):
-        if c.isdigit():
-            n = n * 10 + int(c)
-            cnt = i
-        else:
-            break
-    s = s[cnt + 1:]
-    return n, s
+from utils import strtol
 
 class Compiler():
     def __init__(self, file_path: str) -> None:
