@@ -1,6 +1,8 @@
 import sys
+from utils import strtol
 
-REGISTER_MAP = {"a0": "01010", "t0": "00101", "zero": "00000"}
+REGISTER_MAP = {"zero": "00000", "ra": "00001", "sp": "00010", "t0": "00101", 
+                "t1": "00110", "t2": "00111", "a0": "01010", "t3": "11100"}
 
 if __name__ == "__main__":
     args = sys.argv
@@ -47,6 +49,26 @@ if __name__ == "__main__":
                 bin += "000"
                 bin += REGISTER_MAP[toks[1]]
                 bin += "01100"
+                bin += "11"
+            
+            if toks[0] == "lw":
+                n, rest = strtol(toks[2])
+                bin += f"{n:012b}"
+                bin += f"{REGISTER_MAP[rest.replace('(', '').replace(')', '')]}"
+                bin += "010"
+                bin += REGISTER_MAP[toks[1]]
+                bin += "00000"
+                bin += "11"
+            
+            if toks[0] == "sw":
+                n, rest = strtol(toks[2])
+                offset = f"{n:012b}"
+                bin += offset[:7]
+                bin += f"{REGISTER_MAP[toks[1]]}"
+                bin += f"{REGISTER_MAP[rest.replace('(', '').replace(')', '')]}"
+                bin += "010"
+                bin += offset[7:]
+                bin += "01000"
                 bin += "11"
 
             if line == "ret":
