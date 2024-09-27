@@ -34,17 +34,25 @@ class Parser():
         return node
 
     def _mul(self) -> Node:
-        node = self._primary()
+        node = self._unary()
 
         while True:
             if self.tokenizer.consume("*"):
-                node = Node(NodeType.ND_MUL, node, self._primary())
+                node = Node(NodeType.ND_MUL, node, self._unary())
             elif self.tokenizer.consume("/"):
-                node = Node(NodeType.ND_DIV, node, self._primary())
+                node = Node(NodeType.ND_DIV, node, self._unary())
             else:
                 break
         
         return node
+    
+    def _unary(self) -> Node:
+        if self.tokenizer.consume("+"):
+            return self._primary()
+        elif self.tokenizer.consume("-"):
+            return Node(NodeType.ND_SUB, Node(NodeType.ND_NUM, val=0), self._primary())
+        else:
+            return self._primary()
     
     def _primary(self) -> Node:
         if self.tokenizer.consume("("):
