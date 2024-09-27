@@ -7,6 +7,10 @@ class NodeType(Enum):
     ND_MUL = 2
     ND_DIV = 3
     ND_NUM = 4
+    ND_EQ = 5
+    ND_NEQ = 6
+    ND_LT = 7
+    ND_LE = 8
 
 class Node():
     def __init__(self, type, lhs = None, rhs = None, val = None) -> None:
@@ -21,6 +25,39 @@ class Parser():
         self.root: Node | None = None
     
     def _expr(self) -> Node:
+        return self._equality()
+    
+    def _equality(self) -> Node:
+        node = self._relational()
+
+        while True:
+            if self.tokenizer.consume("=="):
+                node = Node(NodeType.ND_EQ, node, self._relational())
+            elif self.tokenizer.consume("!="):
+                node = Node(NodeType.ND_NEQ, node, self._relational())
+            else:
+                break
+        
+        return node
+    
+    def _relational(self) -> Node:
+        node = self._add()
+
+        while True:
+            if self.tokenizer.consume("<"):
+                node = Node(NodeType.ND_LT, node, self._add())
+            elif self.tokenizer.consume("<="):
+                node = Node(NodeType.ND_LE, node, self._add())
+            elif self.tokenizer.consume(">"):
+                node = Node(NodeType.ND_LT, self._add(), node)
+            elif self.tokenizer.consume(">="):
+                node = Node(NodeType.ND_LE, self._add(), node)
+            else:
+                break
+        
+        return node
+    
+    def _add(self) -> Node:
         node = self._mul()
 
         while True:
@@ -30,7 +67,7 @@ class Parser():
                 node = Node(NodeType.ND_SUB, node, self._mul())
             else:
                 break
-
+        
         return node
 
     def _mul(self) -> Node:

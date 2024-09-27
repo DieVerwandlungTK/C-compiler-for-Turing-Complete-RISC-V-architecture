@@ -55,9 +55,40 @@ class Compiler():
             
             elif node.node_type == NodeType.ND_NUM:
                 f.write(f"   li t0, {node.val}\n")
-                f.write("   sw t0, 0(sp)\n")
-                f.write("   li t0, 4\n")
-                f.write("   addi sp, sp, 4\n")
+                _epilogue()
+            
+            elif node.node_type == NodeType.ND_EQ:
+                _recursive_compile(node.rhs)
+                _recursive_compile(node.lhs)
+                _prelude()
+                f.write("   xor t0, t0, t1\n")
+                f.write("   seqz t0, t0\n")
+                _epilogue()
+            
+            elif node.node_type == NodeType.ND_NEQ:
+                _recursive_compile(node.rhs)
+                _recursive_compile(node.lhs)
+                _prelude()
+                f.write("   xor t0, t0, t1\n")
+                f.write("   snez t0, t0\n")
+                _epilogue()
+
+            elif node.node_type == NodeType.ND_LT:
+                _recursive_compile(node.rhs)
+                _recursive_compile(node.lhs)
+                _prelude()
+                f.write("   slt t0, t0, t1\n")
+                _epilogue()
+            
+            elif node.node_type == NodeType.ND_LE:
+                _recursive_compile(node.rhs)
+                _recursive_compile(node.lhs)
+                _prelude()
+                f.write("   slt t2, t0, t1\n")
+                f.write("   xor t3, t0, t1\n")
+                f.write("   seqz t3, t3\n")
+                f.write("   or t0, t2, t3\n")
+                _epilogue()
             
             else:
                 sys.exit(1)

@@ -22,13 +22,18 @@ class Tokenizer():
             if src[i].isspace():
                 i += 1
                 continue
+            
+            elif src[i:i+2] in ("==", "!=", "<=", ">="):
+                self.tokens.append(Token(TokenType.TK_RESERVED, src[i:i+2]))
+                i += 2
+                continue
 
-            if src[i] in "+-()*/":
+            elif src[i] in "+-()*/<>":
                 self.tokens.append(Token(TokenType.TK_RESERVED, src[i]))
                 i += 1
                 continue
 
-            if src[i].isdigit():
+            elif src[i].isdigit():
                 val = 0
                 val_len = 0
                 while i+val_len < len(src) and src[i+val_len].isdigit():
