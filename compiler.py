@@ -1,7 +1,6 @@
 import sys
 from tokenizer import Tokenizer, TokenType
 from syntax_tree import Parser, Node, NodeType
-from utils import strtol
 
 class Compiler():
     def __init__(self, file_path: str) -> None:
@@ -13,6 +12,7 @@ class Compiler():
 
         f = open(self.file_name, "a")
         f.write("main:\n")
+
         def _prelude() -> None:
             f.write("   li t2, 4\n")
             f.write("   sub sp, sp, t2\n")
@@ -62,6 +62,7 @@ class Compiler():
             else:
                 sys.exit(1)
             f.write("\n")
+            
         _recursive_compile(node)
         f.write("   ret\n")
         f.close()
