@@ -23,7 +23,7 @@ class Tokenizer():
                 i += 1
                 continue
 
-            if src[i] in "+-()":
+            if src[i] in "+-()*/":
                 self.tokens.append(Token(TokenType.TK_RESERVED, src[i]))
                 i += 1
                 continue
