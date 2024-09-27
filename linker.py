@@ -86,6 +86,12 @@ class Linker():
                 
                 elif toks[0] == "sub":
                     bin = Linker._r_instruction(toks[1], toks[2], toks[3], "000", "0100000")
+
+                elif toks[0] == "mul":
+                    bin = Linker._r_instruction(toks[1], toks[2], toks[3], "000", "0000001")
+                
+                elif toks[0] == "div":
+                    bin = Linker._r_instruction(toks[1], toks[2], toks[3], "100", "0000001")
                 
                 elif toks[0] == "lw":
                     imm, rest = strtol(toks[2])
