@@ -13,50 +13,45 @@ class Compiler():
 
         f = open(self.file_name, "a")
         f.write("main:\n")
+        def _prelude() -> None:
+            f.write("   li t2, 4\n")
+            f.write("   sub sp, sp, t2\n")
+            f.write("   lw t0, 0(sp)\n")
+            f.write("   sub sp, sp, t2\n")
+            f.write("   lw t1, 0(sp)\n")
+        
+        def _epilogue() -> None:
+            f.write("   sw t0, 0(sp)\n")
+            f.write("   addi sp, sp, 4\n")
+
         def _recursive_compile(node: Node) -> None:
             if node.node_type == NodeType.ND_ADD:
                 _recursive_compile(node.rhs)
                 _recursive_compile(node.lhs)
-                f.write("   li t2, 4\n")
-                f.write("   sub sp, sp, t2\n")
-                f.write("   lw t0, 0(sp)\n")
-                f.write("   sub sp, sp, t2\n")
-                f.write("   lw t1, 0(sp)\n")
+                _prelude()
                 f.write("   add t0, t0, t1\n")
-                f.write("   sw t0, 0(sp)\n")
-                f.write("   addi sp, sp, 4\n")
+                _epilogue()
 
             elif node.node_type == NodeType.ND_SUB:
                 _recursive_compile(node.rhs)
                 _recursive_compile(node.lhs)
-                f.write("   li t2, 4\n")
-                f.write("   sub sp, sp, t2\n")
-                f.write("   lw t0, 0(sp)\n")
-                f.write("   sub sp, sp, t2\n")
-                f.write("   lw t1, 0(sp)\n")
+                _prelude()
                 f.write("   sub t0, t0, t1\n")
-                f.write("   sw t0, 0(sp)\n")
-                f.write("   addi sp, sp, 4\n")
+                _epilogue()
             
             elif node.node_type == NodeType.ND_MUL:
                 _recursive_compile(node.rhs)
                 _recursive_compile(node.lhs)
-                f.write("   li t2, 4\n")
-                f.write("   sub sp, sp, t2\n")
-                f.write("   lw t0, 0(sp)\n")
-                f.write("   sub sp, sp, t2\n")
-                f.write("   lw t1, 0(sp)\n")
-                # hoge
+                _prelude()
+                f.write("   mul t0, t0, t1\n")
+                _epilogue()
             
             elif node.node_type == NodeType.ND_DIV:
                 _recursive_compile(node.rhs)
                 _recursive_compile(node.lhs)
-                f.write("   li t2, 4\n")
-                f.write("   sub sp, sp, t2\n")
-                f.write("   lw t0, 0(sp)\n")
-                f.write("   sub sp, sp, t2\n")
-                f.write("   lw t1, 0(sp)\n")
-                # fuga
+                _prelude()
+                f.write("   div t0, t0, t1\n")
+                _epilogue()
             
             elif node.node_type == NodeType.ND_NUM:
                 f.write(f"   li t0, {node.val}\n")
