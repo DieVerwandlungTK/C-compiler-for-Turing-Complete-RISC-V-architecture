@@ -41,6 +41,9 @@ class Compiler():
 
         f = open(self.file_name, "a")
         f.write("main:\n")
+        f.write("   lui sp, 15\n")
+        f.write("   ori sp, sp, 4095\n")
+        f.write("\n")
 
         def _pop_operands() -> None:
             """ Pop the operands from the stack
@@ -161,6 +164,7 @@ class Compiler():
             
         _recursive_compile(node)
         
+        f.write("   lw a0, 0(sp)\n")
         f.write("   ret\n")
         f.close()
 
