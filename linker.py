@@ -17,46 +17,46 @@ class Linker():
         return f"{funct7}{Linker.REGISTER_MAP[rs2]}{Linker.REGISTER_MAP[rs1]}{funct3}{Linker.REGISTER_MAP[rd]}0110011"
     
     @staticmethod
-    def _i_instruction(opcode: str, rd: str, rs1: str, imm: int, funct3: str) -> str:
-        return f"{imm:012b}{Linker.REGISTER_MAP[rs1]}{funct3}{Linker.REGISTER_MAP[rd]}{opcode}"
+    def _i_instruction(opcode: str, rd: str, rs1: str, imm: str, funct3: str) -> str:
+        return f"{int(imm):012b}{Linker.REGISTER_MAP[rs1]}{funct3}{Linker.REGISTER_MAP[rd]}{opcode}"
     
     @staticmethod
-    def _arithmetic_i_instruction(rd: str, rs1: str, rs2: str, funct3: str) -> str:
-        return Linker._i_instruction("0010011", rd, rs1, int(rs2), funct3)
+    def _arithmetic_i_instruction(rd: str, rs1: str, imm: str, funct3: str) -> str:
+        return Linker._i_instruction("0010011", rd, rs1, imm, funct3)
     
     @staticmethod
-    def _load_i_instruction(rd: str, rs1: str, imm: int, funct3: str) -> str:
+    def _load_i_instruction(rd: str, rs1: str, imm: str, funct3: str) -> str:
         return Linker._i_instruction("0000011", rd, rs1, imm, funct3)
     
     @staticmethod
-    def _jalr_i_instruction(rd: str, rs1: str, imm: int) -> str:
+    def _jalr_i_instruction(rd: str, rs1: str, imm: str) -> str:
         return Linker._i_instruction("1100111", rd, rs1, imm, "000")
     
     @staticmethod
-    def _s_instruction(rs2: str, rs1: str, imm: int, funct3: str) -> str:
-        imm = f"{imm:012b}"
+    def _s_instruction(rs2: str, rs1: str, imm: str, funct3: str) -> str:
+        imm = f"{int(imm):012b}"
         return f"{imm[:7]}{Linker.REGISTER_MAP[rs2]}{Linker.REGISTER_MAP[rs1]}{funct3}{imm[7:]}0100011"
     
     @staticmethod
-    def _b_instruction(rs1: str, rs2: str, imm: int, funct3: str) -> str:
-        imm = f"{imm:012b}"
+    def _b_instruction(rs1: str, rs2: str, imm: str, funct3: str) -> str:
+        imm = f"{int(imm):012b}"
         return f"{imm[0]}{imm[2:8]}{Linker.REGISTER_MAP[rs2]}{Linker.REGISTER_MAP[rs1]}{funct3}{imm[8:]}{imm[1]}1100011"
     
     @staticmethod
-    def _u_instruction(opcode: str, rd: str, imm: int) -> str:
-        return f"{imm:020b}{Linker.REGISTER_MAP[rd]}{opcode}"
+    def _u_instruction(opcode: str, rd: str, imm: str) -> str:
+        return f"{int(imm):020b}{Linker.REGISTER_MAP[rd]}{opcode}"
     
     @staticmethod
-    def _lui_u_instruction(rd: str, imm: int) -> str:
+    def _lui_u_instruction(rd: str, imm: str) -> str:
         return Linker._u_instruction("0110111", rd, imm)
     
     @staticmethod
-    def _auipc_u_instruction(rd: str, imm: int) -> str:
+    def _auipc_u_instruction(rd: str, imm: str) -> str:
         return Linker._u_instruction("0010111", rd, imm)
     
     @staticmethod
-    def _j_instruction(rd: str, imm: int) -> str:
-        imm = f"{imm:020b}"
+    def _j_instruction(rd: str, imm: str) -> str:
+        imm = f"{int(imm):020b}"
         return f"{imm[0]}{imm[10]}{imm[9]}{imm[1:9]}{Linker.REGISTER_MAP[rd]}1101111"
 
     def link(self, file_path: str) -> None:
@@ -74,9 +74,6 @@ class Linker():
 
                 if toks[0] == "main:":
                     continue
-
-                elif toks[0] == "li":
-                    bin = Linker._arithmetic_i_instruction(toks[1], "zero", toks[2], "000")
                 
                 elif toks[0] == "addi":
                     bin = Linker._arithmetic_i_instruction(toks[1], toks[2], toks[3], "000")
@@ -86,12 +83,18 @@ class Linker():
                 
                 elif toks[0] == "sub":
                     bin = Linker._r_instruction(toks[1], toks[2], toks[3], "000", "0100000")
-
-                elif toks[0] == "mul":
-                    bin = Linker._r_instruction(toks[1], toks[2], toks[3], "000", "0000001")
                 
-                elif toks[0] == "div":
-                    bin = Linker._r_instruction(toks[1], toks[2], toks[3], "100", "0000001")
+                elif toks[0] == "slt":
+                    bin = Linker._r_instruction(toks[1], toks[2], toks[3], "010", "0000000")
+                
+                elif toks[0] == "sltu":
+                    bin = Linker._r_instruction(toks[1], toks[2], toks[3], "011", "0000000")
+                
+                elif toks[0] == "xor":
+                    bin = Linker._r_instruction(toks[1], toks[2], toks[3], "100", "0000000")
+                
+                elif toks[0] == "or":
+                    bin = Linker._r_instruction(toks[1], toks[2], toks[3], "110", "0000000")
                 
                 elif toks[0] == "lw":
                     imm, rest = strtol(toks[2])
@@ -102,6 +105,23 @@ class Linker():
                     imm, rest = strtol(toks[2])
                     rs1 = rest.replace("(", "").replace(")", "")
                     bin = Linker._s_instruction(toks[1], rs1, imm, "010")
+                
+                # M-extension
+                elif toks[0] == "mul":
+                    bin = Linker._r_instruction(toks[1], toks[2], toks[3], "000", "0000001")
+                
+                elif toks[0] == "div":
+                    bin = Linker._r_instruction(toks[1], toks[2], toks[3], "100", "0000001")
+                
+                # pseudo instructions
+                elif toks[0] == "li":
+                    bin = Linker._arithmetic_i_instruction(toks[1], "zero", toks[2], "000")
+                
+                elif toks[0] == "seqz":
+                    bin = Linker._arithmetic_i_instruction(toks[1], "zero", "1", "011")
+                
+                elif toks[0] == "snez":
+                    bin = Linker._r_instruction(toks[1], "zero", toks[2], "010", "0000000")
 
                 elif line == "ret":
                     continue
