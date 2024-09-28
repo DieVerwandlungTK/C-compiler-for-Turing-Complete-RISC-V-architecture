@@ -78,6 +78,9 @@ class Assembler():
                 elif toks[0] == "addi":
                     bin = Assembler._arithmetic_i_instruction(toks[1], toks[2], toks[3], "000")
                 
+                elif toks[0] == "ori":
+                    bin = Assembler._arithmetic_i_instruction(toks[1], toks[2], toks[3], "110")
+                
                 elif toks[0] == "add":
                     bin = Assembler._r_instruction(toks[1], toks[2], toks[3], "000", "0000000")
                 
@@ -95,6 +98,9 @@ class Assembler():
                 
                 elif toks[0] == "or":
                     bin = Assembler._r_instruction(toks[1], toks[2], toks[3], "110", "0000000")
+                
+                elif toks[0] == "lui":
+                    bin = Assembler._lui_u_instruction(toks[1], toks[2])
                 
                 elif toks[0] == "lw":
                     imm, rest = strtol(toks[2])
@@ -123,8 +129,12 @@ class Assembler():
                 elif toks[0] == "snez":
                     bin = Assembler._r_instruction(toks[1], "zero", toks[2], "010", "0000000")
 
-                elif line == "ret":
+                elif toks[0] == "ret":
                     continue
+
+                else:
+                    print(f"Unknown instruction: {toks[0]}", file=sys.stderr)
+                    sys.exit(1)
 
                 if len(bin) > 0:
                     out = open("out.bin", "ba")
