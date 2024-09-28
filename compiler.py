@@ -55,11 +55,9 @@ class Compiler():
 
             """
 
-            f.write("   li t2, 4\n")
-            f.write("   sub sp, sp, t2\n")
             f.write("   lw t0, 0(sp)\n")
-            f.write("   sub sp, sp, t2\n")
-            f.write("   lw t1, 0(sp)\n")
+            f.write("   lw t1, 16(sp)\n")
+            f.write("   addi sp, sp, 32\n")
         
         def _push_result() -> None:
             """ Push the result to the stack
@@ -74,8 +72,9 @@ class Compiler():
 
             """
 
+            f.write("   li t1, 16\n")
+            f.write("   sub sp, sp, t1\n")
             f.write("   sw t0, 0(sp)\n")
-            f.write("   addi sp, sp, 4\n")
 
         def _recursive_compile(node: Node) -> None:
             """ Recursively compile the syntax tree
