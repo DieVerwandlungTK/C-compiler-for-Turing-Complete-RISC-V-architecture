@@ -2,15 +2,17 @@ from enum import Enum
 from tokenizer import Tokenizer
 
 class NodeType(Enum):
-    ND_ADD = 0
-    ND_SUB = 1
-    ND_MUL = 2
-    ND_DIV = 3
-    ND_NUM = 4
-    ND_EQ = 5
-    ND_NEQ = 6
-    ND_LT = 7
-    ND_LE = 8
+    ND_ADD = 0      # +
+    ND_SUB = 1      # -
+    ND_MUL = 2      # *
+    ND_DIV = 3      # /
+    ND_NUM = 4      # Number
+    ND_EQ = 5       # ==
+    ND_NEQ = 6      # !=
+    ND_LT = 7       # <
+    ND_LE = 8       # <=
+    ND_LVAL = 9     # Local variable
+    ND_ASSIGN = 10  # =
 
 class Node():
     def __init__(self, type, lhs = None, rhs = None, val = None) -> None:
@@ -22,10 +24,23 @@ class Node():
 class Parser():
     def __init__(self, tokenizer: Tokenizer) -> None:
         self.tokenizer: Tokenizer = tokenizer
-        self.root: Node | None = None
+        self.code: list[Node] = []
+    
+    def _stmt(self) -> Node:
+        node = self._expr()
+        self.tokenizer.expect(";")
+        return node
     
     def _expr(self) -> Node:
-        return self._equality()
+        return self._assign()
+    
+    def _assign(self) -> Node:
+        node = self._equality()
+
+        if self.tokenizer.consume("="):
+            node = Node(NodeType.ND_ASSIGN, node, self._assign())
+        
+        return node
     
     def _equality(self) -> Node:
         node = self._relational()
@@ -100,5 +115,6 @@ class Parser():
             return Node(NodeType.ND_NUM, val=self.tokenizer.expect_number())
     
     def parse(self) -> None:
-        self.root = self._expr()
+        while not self.tokenizer.at_eof():
+            self.code.append(self._stmt())
         
