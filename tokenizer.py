@@ -60,6 +60,12 @@ class Tokenizer():
         self.tokens.pop(0)
         return True
     
+    def consume_ident(self) -> Token | None:
+        if self.tokens[0].type != TokenType.TK_IDENT:
+            return None
+        
+        return self.tokens.pop(0)
+    
     def expect(self, op: str) -> None:
         if self.tokens[0].type != TokenType.TK_RESERVED or self.tokens[0].token_str != op:
             print(f"Expected {op} but got {self.tokens[0].token_str}.", file=sys.stderr)
