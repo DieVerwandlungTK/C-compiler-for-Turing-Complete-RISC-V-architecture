@@ -3,8 +3,9 @@ import sys
 
 class TokenType(Enum):
     TK_RESERVED = 0
-    TK_NUM = 1
-    TK_EOF = 2
+    TK_IDENT = 1
+    TK_NUM = 2
+    TK_EOF = 3
 
 class Token():
     def __init__(self, type: TokenType, token_str: str, val = None) -> None:
@@ -41,6 +42,11 @@ class Tokenizer():
                     val_len += 1
                 self.tokens.append(Token(TokenType.TK_NUM, src[i:i+val_len], val))
                 i += val_len
+                continue
+
+            elif ord("a") <= ord(src[i]) and ord(src[i]) <= ord("z"):
+                self.tokens.append(Token(TokenType.TK_IDENT, src[i]))
+                i += 1
                 continue
 
             print(f"Failed to tokenize: {src[i:]}", file=sys.stderr)
