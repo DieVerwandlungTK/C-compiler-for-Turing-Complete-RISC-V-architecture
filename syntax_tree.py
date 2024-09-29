@@ -11,7 +11,7 @@ class NodeType(Enum):
     ND_NEQ = 6      # !=
     ND_LT = 7       # <
     ND_LE = 8       # <=
-    ND_LVAL = 9     # Local variable
+    ND_LVAR = 9     # Local variable
     ND_ASSIGN = 10  # =
 
 class Node():
