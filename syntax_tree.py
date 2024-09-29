@@ -122,7 +122,7 @@ class Parser():
     def _primary(self) -> Node:
         tok = self.tokenizer.consume_ident()
         if tok:
-            offset = ord(tok.token_str) - ord("a")
+            offset = (ord(tok.token_str) - ord("a") + 1)*4
             return Node(NodeType.ND_LVAL, offset=offset)
         
         elif self.tokenizer.consume("("):
