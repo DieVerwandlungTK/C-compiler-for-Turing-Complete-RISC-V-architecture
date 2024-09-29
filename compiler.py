@@ -1,5 +1,5 @@
 import sys
-from tokenizer import Tokenizer, TokenType
+from tokenizer import Tokenizer
 from syntax_tree import Parser, Node, NodeType
 
 class Compiler():
@@ -25,7 +25,7 @@ class Compiler():
 
         self.file_name = file_path
     
-    def compile(self, node: Node) -> None:
+    def compile(self, code: list[Node]) -> None:
         """ Compile the given syntax tree into a RISC-V assembly code
 
         Args:
@@ -41,8 +41,9 @@ class Compiler():
 
         f = open(self.file_name, "a")
         f.write("main:\n")
-        f.write("   lui sp, 15\n")
-        f.write("   ori sp, sp, 4095\n")
+        f.write("   lui t0, 16\n")
+        f.write("   add sp, sp, t0")
+        f.write("   add fp, fp, t0")
         f.write("\n")
 
         def _pop_operands() -> None:
@@ -65,7 +66,7 @@ class Compiler():
         def _push_result() -> None:
             """ Push the result to the stack
 
-            This function pushes the result to the stack.
+            This function pushes the t0 register's value to the stack.
 
             Args:
                 None: This function does not take any arguments.
@@ -78,8 +79,16 @@ class Compiler():
             f.write("   li t1, 16\n")
             f.write("   sub sp, sp, t1\n")
             f.write("   sw t0, 0(sp)\n")
+        
+        def _gen_lval(node: Node) -> None:
+            if node.node_type != NodeType.ND_LVAR:
+                sys.exit(1)
+            f.write(f"   li t0, {node.offset}\n")
+            f.write("   sub t0, fp, t0\n")
+            _push_result()
+            
 
-        def _recursive_compile(node: Node) -> None:
+        def _gen(node: Node) -> None:
             """ Recursively compile the syntax tree
 
             This function recursively compiles the syntax tree.
@@ -92,77 +101,66 @@ class Compiler():
 
             """
 
-            if node.node_type == NodeType.ND_ADD:
-                _recursive_compile(node.rhs)    # Evaluate the right-hand side
-                _recursive_compile(node.lhs)    # Evaluate the right-hand side
-                _pop_operands()                 # Pop the operands from the stack
-                f.write("   add t0, t0, t1\n")  # Add the operands
-                _push_result()                  # Push the result to the stack
-
-            elif node.node_type == NodeType.ND_SUB:
-                _recursive_compile(node.rhs)
-                _recursive_compile(node.lhs)
-                _pop_operands()
-                f.write("   sub t0, t0, t1\n")
-                _push_result()
-            
-            elif node.node_type == NodeType.ND_MUL:
-                _recursive_compile(node.rhs)
-                _recursive_compile(node.lhs)
-                _pop_operands()
-                f.write("   mul t0, t0, t1\n")
-                _push_result()
-            
-            elif node.node_type == NodeType.ND_DIV:
-                _recursive_compile(node.rhs)
-                _recursive_compile(node.lhs)
-                _pop_operands()
-                f.write("   div t0, t0, t1\n")
-                _push_result()
-            
-            elif node.node_type == NodeType.ND_NUM:
+            if node.node_type == NodeType.ND_NUM:
                 f.write(f"   li t0, {node.val}\n")
                 _push_result()
+                
+            elif node.node_type == NodeType.ND_LVAR:
+                _gen_lval(node)
+                f.write("   lw t0, 0(sp)\n")
+                f.write("   lw t0, 0(t0)\n")
+                f.write("   sw t0, 0(sp)\n")
+            
+            elif node.node_type == NodeType.ND_ASSIGN:
+                _gen_lval(node.lhs)
+                _gen(node.rhs)
+                _pop_operands()
+                f.write("   sw t0, 0(t1)\n")
+                _push_result()
+            
+            _gen(node.lhs)      # Generate the left node
+            _gen(node.rhs)      # Generate the right node
+            _pop_operands()     # Pop the operands from the stack
+            # left node is in t1, right node is in t0
+
+            if node.node_type == NodeType.ND_ADD:         
+                f.write("   add t0, t1, t0\n")  # Add the operands
+
+            elif node.node_type == NodeType.ND_SUB:
+                f.write("   sub t0, t1, t0\n")
+            
+            elif node.node_type == NodeType.ND_MUL:
+                f.write("   mul t0, t1, t0\n")
+            
+            elif node.node_type == NodeType.ND_DIV:
+                f.write("   div t0, t1, t0\n")
             
             elif node.node_type == NodeType.ND_EQ:
-                _recursive_compile(node.rhs)
-                _recursive_compile(node.lhs)
-                _pop_operands()
-                f.write("   xor t0, t0, t1\n")
+                f.write("   xor t0, t1, t0\n")
                 f.write("   seqz t0, t0\n")
-                _push_result()
             
             elif node.node_type == NodeType.ND_NEQ:
-                _recursive_compile(node.rhs)
-                _recursive_compile(node.lhs)
-                _pop_operands()
-                f.write("   xor t0, t0, t1\n")
+                f.write("   xor t0, t1, t0\n")
                 f.write("   snez t0, t0\n")
-                _push_result()
 
             elif node.node_type == NodeType.ND_LT:
-                _recursive_compile(node.rhs)
-                _recursive_compile(node.lhs)
-                _pop_operands()
-                f.write("   slt t0, t0, t1\n")
-                _push_result()
+                f.write("   slt t0, t1, t0\n")
             
             elif node.node_type == NodeType.ND_LE:
-                _recursive_compile(node.rhs)
-                _recursive_compile(node.lhs)
-                _pop_operands()
-                f.write("   slt t2, t0, t1\n")  # t2 = t0 < t1
-                f.write("   xor t3, t0, t1\n")  # t3 = t0 ^ t1
+                f.write("   slt t2, t1, t0\n")  # t2 = t1 < t0
+                f.write("   xor t3, t1, t0\n")  # t3 = t0 ^ t1
                 f.write("   seqz t3, t3\n")     # t3 = t3 == 0
                 f.write("   or t0, t2, t3\n")   # t0 = t2 || t3
-                _push_result()
             
             else:
                 sys.exit(1)
 
+            _push_result()      # Push the result to the stack
             f.write("\n")
             
-        _recursive_compile(node)
+        for node in code:
+            _gen(node)
+            f.write("   addi sp, sp, 16\n")
         
         f.write("   lw a0, 0(sp)\n")
         f.write("   ret\n")
@@ -185,4 +183,4 @@ if __name__ == "__main__":
     parser = Parser(tokenizer)
     parser.parse()
     compiler = Compiler(args[2])
-    compiler.compile(parser.root)
+    map(compiler.compile, parser.code)
