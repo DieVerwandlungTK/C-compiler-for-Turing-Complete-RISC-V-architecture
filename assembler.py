@@ -124,7 +124,7 @@ class Assembler():
                     bin = Assembler._arithmetic_i_instruction(toks[1], "zero", toks[2], "000")
                 
                 elif toks[0] == "mv":
-                    bin = Assembler._arithmetic_i_instruction(toks[1], toks[2], "0" "000")
+                    bin = Assembler._arithmetic_i_instruction(toks[1], toks[2], "0", "000")
 
                 elif toks[0] == "seqz":
                     bin = Assembler._arithmetic_i_instruction(toks[1], "zero", "1", "011")
