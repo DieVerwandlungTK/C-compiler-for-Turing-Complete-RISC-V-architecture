@@ -29,7 +29,7 @@ class Tokenizer():
                 i += 2
                 continue
 
-            elif src[i] in "+-()*/<>":
+            elif src[i] in "+-()*/<>=;":
                 self.tokens.append(Token(TokenType.TK_RESERVED, src[i]))
                 i += 1
                 continue
