@@ -129,6 +129,18 @@ class Compiler():
 
                 return None
             
+            elif node.node_type == NodeType.ND_RETURN:
+                _gen(node.lhs)
+                f.write("   lw a0, 0(sp)\n")
+                f.write("   addi sp, sp, 16\n")
+                f.write("   mv sp, fp\n")
+                f.write("   lw fp, 0(sp)\n")
+                f.write("   addi sp, sp, 16\n")
+                f.write("   ret\n")
+                f.write("\n")
+
+                return None
+            
             _gen(node.lhs)      # Generate the left node
             _gen(node.rhs)      # Generate the right node
             _pop_operands()     # Pop the operands from the stack
@@ -175,11 +187,8 @@ class Compiler():
             _gen(node)
             f.write("   lw a0, 0(sp)\n")
             f.write("   addi sp, sp, 16\n")
+            f.write("\n")
         
-        f.write("   mv sp, fp\n")
-        f.write("   lw fp, 0(sp)\n")
-        f.write("   addi sp, sp, 16\n")
-        f.write("   ret\n")
         f.close()
 
 

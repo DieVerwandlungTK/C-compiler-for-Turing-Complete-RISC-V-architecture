@@ -7,6 +7,7 @@ class TokenType(Enum):
     TK_IDENT = 1
     TK_NUM = 2
     TK_EOF = 3
+    TK_RETURN = 4
 
 class Token():
     def __init__(self, type: TokenType, token_str: str, val = None) -> None:
@@ -47,8 +48,14 @@ class Tokenizer():
                 i += len(ident)
                 continue
 
-            print(f"Failed to tokenize: {src[i:]}", file=sys.stderr)
-            sys.exit(1)
+            elif src[i:i+6] == "return" and not src[i+6].isalnum() and src[i+6] != "_":
+                self.tokens.append(Token(TokenType.TK_RETURN, "return"))
+                i += 6
+                continue
+
+            else:
+                print(f"Failed to tokenize: {src[i:]}", file=sys.stderr)
+                sys.exit(1)
         
         self.tokens.append(Token(TokenType.TK_EOF, ""))
     

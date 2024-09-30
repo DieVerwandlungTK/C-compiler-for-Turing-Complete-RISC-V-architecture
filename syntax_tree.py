@@ -13,6 +13,7 @@ class NodeType(Enum):
     ND_LE = 8       # <=
     ND_LVAR = 9     # Local variable
     ND_ASSIGN = 10  # =
+    ND_RETURN = 11  # return
 
 class Node():
     def __init__(self, type, lhs = None, rhs = None, val = None, offset = None) -> None:
@@ -30,7 +31,10 @@ class Parser():
         self.lvar_offsets: list[int] = [0]
     
     def _stmt(self) -> Node:
-        node = self._expr()
+        if self.tokenizer.consume("return"):
+            node = Node(NodeType.ND_RETURN, self._expr())
+        else:
+            node = self._expr()
         self.tokenizer.expect(";")
         return node
     
