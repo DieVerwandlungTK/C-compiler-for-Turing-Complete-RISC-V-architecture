@@ -14,3 +14,12 @@ def is_valid_as_head(s: str) -> bool:
     if s[0].isalpha() or s[0] == "_":
         return True
     return False
+
+def get_ident(s: str) -> str:
+    ident = ""
+    for c in s:
+        if c.isalnum() or c == "_":
+            ident += c
+        else:
+            break
+    return ident
