@@ -103,12 +103,14 @@ class Assembler():
                     bin = Assembler._lui_u_instruction(toks[1], toks[2])
                 
                 elif toks[0] == "lw":
-                    imm, rest = strtol(toks[2])
+                    imm, len = strtol(toks[2])
+                    rest = toks[2][len:]
                     rs1 = rest.replace("(", "").replace(")", "")
                     bin = Assembler._load_i_instruction(toks[1], rs1, imm, "010")
                 
                 elif toks[0] == "sw":
-                    imm, rest = strtol(toks[2])
+                    imm, len = strtol(toks[2])
+                    rest = toks[2][len:]
                     rs1 = rest.replace("(", "").replace(")", "")
                     bin = Assembler._s_instruction(toks[1], rs1, imm, "010")
                 
