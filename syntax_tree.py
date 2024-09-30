@@ -26,6 +26,8 @@ class Parser():
     def __init__(self, tokenizer: Tokenizer) -> None:
         self.tokenizer: Tokenizer = tokenizer
         self.code: list[Node] = []
+        self.l_vars: list[str] = ["0"]  # Initialize with null variable (for some convenience)
+        self.lvar_offsets: list[int] = [0]
     
     def _stmt(self) -> Node:
         node = self._expr()
@@ -122,7 +124,12 @@ class Parser():
     def _primary(self) -> Node:
         tok = self.tokenizer.consume_ident()
         if tok:
-            offset = (ord(tok.token_str) - ord("a") + 1)*4
+            if tok.token_str not in self.l_vars:
+                tail_offset = self.lvar_offsets[-1]
+                self.l_vars.append(tok.token_str)
+                self.lvar_offsets.append(tail_offset + 4)
+
+            offset = self.lvar_offsets[self.l_vars.index(tok.token_str)]
             return Node(NodeType.ND_LVAR, offset=offset)
         
         elif self.tokenizer.consume("("):

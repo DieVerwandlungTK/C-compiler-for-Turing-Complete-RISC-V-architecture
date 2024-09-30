@@ -1,5 +1,6 @@
 from enum import Enum
 import sys
+from utils import *
 
 class TokenType(Enum):
     TK_RESERVED = 0
@@ -35,18 +36,15 @@ class Tokenizer():
                 continue
 
             elif src[i].isdigit():
-                val = 0
-                val_len = 0
-                while i+val_len < len(src) and src[i+val_len].isdigit():
-                    val = val * 10 + int(src[i+val_len])
-                    val_len += 1
-                self.tokens.append(Token(TokenType.TK_NUM, src[i:i+val_len], val))
-                i += val_len
+                val, len = strtol(src[i:])
+                self.tokens.append(Token(TokenType.TK_NUM, src[i:i+len], val))
+                i += len
                 continue
 
-            elif ord("a") <= ord(src[i]) and ord(src[i]) <= ord("z"):
-                self.tokens.append(Token(TokenType.TK_IDENT, src[i]))
-                i += 1
+            elif is_valid_as_head(src[i]):
+                ident = get_ident(src[i:])
+                self.tokens.append(Token(TokenType.TK_IDENT, ident))
+                i += len(ident)
                 continue
 
             print(f"Failed to tokenize: {src[i:]}", file=sys.stderr)
