@@ -44,6 +44,7 @@ class Compiler():
         f.write("   lui t0, 16\n")
         f.write("   add sp, sp, t0\n")
         f.write("   add fp, fp, t0\n")
+        f.write("   addi sp, sp, 112\n")
         f.write("\n")
 
         def _pop_operands() -> None:
@@ -68,6 +69,8 @@ class Compiler():
 
             This function pushes the t0 register's value to the stack.
 
+            Be careful that this function overwrite the t1 register.
+
             Args:
                 None: This function does not take any arguments.
             
@@ -86,7 +89,6 @@ class Compiler():
             f.write(f"   li t0, {node.offset}\n")
             f.write("   sub t0, fp, t0\n")
             _push_result()
-            
 
         def _gen(node: Node) -> None:
             """ Recursively compile the syntax tree
@@ -171,15 +173,14 @@ class Compiler():
             
         for node in code:
             _gen(node)
+            f.write("   lw a0, 0(sp)\n")
             f.write("   addi sp, sp, 16\n")
         
-        f.write("   lw a0, 0(sp)\n")
+        f.write("   mv sp, fp\n")
+        f.write("   lw fp, 0(sp)\n")
+        f.write("   addi sp, sp, 16\n")
         f.write("   ret\n")
         f.close()
-
-                
-
-
 
 
 if __name__ == "__main__":
