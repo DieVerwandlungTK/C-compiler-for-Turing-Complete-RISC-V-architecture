@@ -42,8 +42,8 @@ class Compiler():
         f = open(self.file_name, "a")
         f.write("main:\n")
         f.write("   lui t0, 16\n")
-        f.write("   add sp, sp, t0")
-        f.write("   add fp, fp, t0")
+        f.write("   add sp, sp, t0\n")
+        f.write("   add fp, fp, t0\n")
         f.write("\n")
 
         def _pop_operands() -> None:
@@ -104,12 +104,18 @@ class Compiler():
             if node.node_type == NodeType.ND_NUM:
                 f.write(f"   li t0, {node.val}\n")
                 _push_result()
+                f.write("\n")
+
+                return None
                 
             elif node.node_type == NodeType.ND_LVAR:
                 _gen_lval(node)
                 f.write("   lw t0, 0(sp)\n")
                 f.write("   lw t0, 0(t0)\n")
                 f.write("   sw t0, 0(sp)\n")
+                f.write("\n")
+
+                return None
             
             elif node.node_type == NodeType.ND_ASSIGN:
                 _gen_lval(node.lhs)
@@ -117,6 +123,9 @@ class Compiler():
                 _pop_operands()
                 f.write("   sw t0, 0(t1)\n")
                 _push_result()
+                f.write("\n")
+
+                return None
             
             _gen(node.lhs)      # Generate the left node
             _gen(node.rhs)      # Generate the right node
@@ -157,6 +166,8 @@ class Compiler():
 
             _push_result()      # Push the result to the stack
             f.write("\n")
+
+            return None
             
         for node in code:
             _gen(node)
@@ -183,4 +194,4 @@ if __name__ == "__main__":
     parser = Parser(tokenizer)
     parser.parse()
     compiler = Compiler(args[2])
-    map(compiler.compile, parser.code)
+    compiler.compile(parser.code)
