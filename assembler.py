@@ -68,7 +68,6 @@ class Assembler():
                 bin = ""
                 toks = line.split()
                 toks = [tok.replace(",", "") for tok in toks]
-                #print(toks, file=sys.stderr)
                 if len(toks) == 0:
                     continue
 
@@ -103,14 +102,14 @@ class Assembler():
                     bin = Assembler._lui_u_instruction(toks[1], toks[2])
                 
                 elif toks[0] == "lw":
-                    imm, len = strtol(toks[2])
-                    rest = toks[2][len:]
+                    imm, val_len = strtol(toks[2])
+                    rest = toks[2][val_len:]
                     rs1 = rest.replace("(", "").replace(")", "")
                     bin = Assembler._load_i_instruction(toks[1], rs1, imm, "010")
                 
                 elif toks[0] == "sw":
-                    imm, len = strtol(toks[2])
-                    rest = toks[2][len:]
+                    imm, val_len = strtol(toks[2])
+                    rest = toks[2][val_len:]
                     rs1 = rest.replace("(", "").replace(")", "")
                     bin = Assembler._s_instruction(toks[1], rs1, imm, "010")
                 

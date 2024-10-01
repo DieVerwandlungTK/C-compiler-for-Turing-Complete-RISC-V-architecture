@@ -37,20 +37,20 @@ class Tokenizer():
                 continue
 
             elif src[i].isdigit():
-                val, len = strtol(src[i:])
-                self.tokens.append(Token(TokenType.TK_NUM, src[i:i+len], val))
-                i += len
+                val, val_len = strtol(src[i:])
+                self.tokens.append(Token(TokenType.TK_NUM, src[i:i+val_len], val))
+                i += val_len
+                continue
+
+            elif src[i:i+6] == "return" and not src[i+6].isalnum() and src[i+6] != "_":
+                self.tokens.append(Token(TokenType.TK_RETURN, "return"))
+                i += 6
                 continue
 
             elif is_valid_as_head(src[i]):
                 ident = get_ident(src[i:])
                 self.tokens.append(Token(TokenType.TK_IDENT, ident))
                 i += len(ident)
-                continue
-
-            elif src[i:i+6] == "return" and not src[i+6].isalnum() and src[i+6] != "_":
-                self.tokens.append(Token(TokenType.TK_RETURN, "return"))
-                i += 6
                 continue
 
             else:
@@ -60,10 +60,11 @@ class Tokenizer():
         self.tokens.append(Token(TokenType.TK_EOF, ""))
     
     def consume(self, op: str) -> bool:
-        if self.tokens[0].type != TokenType.TK_RESERVED or self.tokens[0].token_str != op:
-            return False
-        self.tokens.pop(0)
-        return True
+        if self.tokens[0].type == TokenType.TK_RESERVED or self.tokens[0].type == TokenType.TK_RETURN:
+            if self.tokens[0].token_str == op:
+                self.tokens.pop(0)
+                return True
+        return False
     
     def consume_ident(self) -> Token | None:
         if self.tokens[0].type != TokenType.TK_IDENT:

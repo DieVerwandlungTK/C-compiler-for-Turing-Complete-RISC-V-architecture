@@ -43,7 +43,6 @@ class Parser():
     
     def _assign(self) -> Node:
         node = self._equality()
-
         if self.tokenizer.consume("="):
             node = Node(NodeType.ND_ASSIGN, node, self._assign())
         

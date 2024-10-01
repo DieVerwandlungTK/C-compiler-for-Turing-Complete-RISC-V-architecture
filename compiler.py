@@ -12,7 +12,7 @@ class Compiler():
 
     """
 
-    def __init__(self, file_path: str) -> None:
+    def __init__(self, parser: Parser) -> None:
         """ Initialize the compiler class
 
         Args:
@@ -23,9 +23,9 @@ class Compiler():
 
         """
 
-        self.file_name = file_path
+        self.parser = parser
     
-    def compile(self, code: list[Node]) -> None:
+    def compile(self, file_path: str) -> None:
         """ Compile the given syntax tree into a RISC-V assembly code
 
         Args:
@@ -36,15 +36,16 @@ class Compiler():
 
         """
 
-        f = open(self.file_name, "w")   # Flush the file
+        f = open(file_path, "w")   # Flush the file
         f.close()
 
-        f = open(self.file_name, "a")
+        f = open(file_path, "a")
         f.write("main:\n")
         f.write("   lui t0, 16\n")
         f.write("   add sp, sp, t0\n")
         f.write("   add fp, fp, t0\n")
-        f.write("   addi sp, sp, 112\n")
+        f.write(f"   lw t0,  {(self.parser.lvar_offsets[-1]//16 + 1)*16}\n")
+        f.write(f"   sub sp, sp, t0\n")
         f.write("\n")
 
         def _pop_operands() -> None:
@@ -89,6 +90,7 @@ class Compiler():
             f.write(f"   li t0, {node.offset}\n")
             f.write("   sub t0, fp, t0\n")
             _push_result()
+            f.write("\n")
 
         def _gen(node: Node) -> None:
             """ Recursively compile the syntax tree
@@ -183,7 +185,7 @@ class Compiler():
 
             return None
             
-        for node in code:
+        for node in self.parser.code:
             _gen(node)
             f.write("   lw a0, 0(sp)\n")
             f.write("   addi sp, sp, 16\n")
@@ -203,5 +205,5 @@ if __name__ == "__main__":
     tokenizer.tokenize(open(args[1], "r").read())
     parser = Parser(tokenizer)
     parser.parse()
-    compiler = Compiler(args[2])
-    compiler.compile(parser.code)
+    compiler = Compiler(parser)
+    compiler.compile(args[2])
