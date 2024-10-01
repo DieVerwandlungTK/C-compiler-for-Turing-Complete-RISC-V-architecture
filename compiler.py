@@ -44,8 +44,7 @@ class Compiler():
         f.write("   lui t0, 16\n")
         f.write("   add sp, sp, t0\n")
         f.write("   add fp, fp, t0\n")
-        f.write(f"   lw t0,  {(self.parser.lvar_offsets[-1]//16 + 1)*16}\n")
-        f.write(f"   sub sp, sp, t0\n")
+        f.write(f"   addi sp, sp, -{(self.parser.lvar_offsets[-1]//16 + 1)*16}\n")
         f.write("\n")
 
         def _pop_operands() -> None:
@@ -80,15 +79,13 @@ class Compiler():
 
             """
 
-            f.write("   li t1, 16\n")
-            f.write("   sub sp, sp, t1\n")
+            f.write("   addi sp, sp, -16\n")
             f.write("   sw t0, 0(sp)\n")
         
         def _gen_lval(node: Node) -> None:
             if node.node_type != NodeType.ND_LVAR:
                 sys.exit(1)
-            f.write(f"   li t0, {node.offset}\n")
-            f.write("   sub t0, fp, t0\n")
+            f.write(f"   addi t0, fp, {node.offset}\n")
             _push_result()
             f.write("\n")
 

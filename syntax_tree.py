@@ -17,8 +17,8 @@ class NodeType(Enum):
     ND_IF = 12      # if
 
 class Node():
-    def __init__(self, type: NodeType, lhs = None, rhs = None, val: int = None, offset: int = None, cond = None, 
-                 then = None, els = None, labels: None | list[str] = None) -> None:
+    def __init__(self, type, lhs = None, rhs = None, val = None, offset = None, cond = None, 
+                 then = None, els = None, labels = None) -> None:
         self.node_type = type
         self.lhs = lhs
         self.rhs = rhs

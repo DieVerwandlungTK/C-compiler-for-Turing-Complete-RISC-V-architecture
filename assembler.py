@@ -1,5 +1,5 @@
 import sys
-from utils import strtol
+from utils import strtol, find_label
 
 class Assembler():
     REGISTER_MAP = {"zero": "00000", "ra": "00001", "sp": "00010", "gp": "00011", "tp": "000100", "t0": "00101",
@@ -11,6 +11,13 @@ class Assembler():
     
     def __init__(self) -> None:
         pass
+
+    @staticmethod
+    def _imm_to_bin(imm: str, width) -> str:
+        imm = int(imm)
+        if imm < 0:
+            imm = (1 << width) + imm
+        return f"{imm:0{width}b}"
     
     @staticmethod
     def _r_instruction(rd: str, rs1: str, rs2: str, funct3: str, funct7: str) -> str:
@@ -18,7 +25,8 @@ class Assembler():
     
     @staticmethod
     def _i_instruction(opcode: str, rd: str, rs1: str, imm: str, funct3: str) -> str:
-        return f"{int(imm):012b}{Assembler.REGISTER_MAP[rs1]}{funct3}{Assembler.REGISTER_MAP[rd]}{opcode}"
+        imm = Assembler._imm_to_bin(imm, 12)
+        return f"{imm}{Assembler.REGISTER_MAP[rs1]}{funct3}{Assembler.REGISTER_MAP[rd]}{opcode}"
     
     @staticmethod
     def _arithmetic_i_instruction(rd: str, rs1: str, imm: str, funct3: str) -> str:
@@ -34,17 +42,18 @@ class Assembler():
     
     @staticmethod
     def _s_instruction(rs2: str, rs1: str, imm: str, funct3: str) -> str:
-        imm = f"{int(imm):012b}"
+        imm = Assembler._imm_to_bin(imm, 12)
         return f"{imm[:7]}{Assembler.REGISTER_MAP[rs2]}{Assembler.REGISTER_MAP[rs1]}{funct3}{imm[7:]}0100011"
     
     @staticmethod
     def _b_instruction(rs1: str, rs2: str, imm: str, funct3: str) -> str:
-        imm = f"{int(imm):012b}"
+        imm = Assembler._imm_to_bin(imm, 12)
         return f"{imm[0]}{imm[2:8]}{Assembler.REGISTER_MAP[rs2]}{Assembler.REGISTER_MAP[rs1]}{funct3}{imm[8:]}{imm[1]}1100011"
     
     @staticmethod
     def _u_instruction(opcode: str, rd: str, imm: str) -> str:
-        return f"{int(imm):020b}{Assembler.REGISTER_MAP[rd]}{opcode}"
+        imm = Assembler._imm_to_bin(imm, 20)
+        return f"{imm}{Assembler.REGISTER_MAP[rd]}{opcode}"
     
     @staticmethod
     def _lui_u_instruction(rd: str, imm: str) -> str:
@@ -56,8 +65,19 @@ class Assembler():
     
     @staticmethod
     def _j_instruction(rd: str, imm: str) -> str:
-        imm = f"{int(imm):020b}"
+        imm = Assembler._imm_to_bin(imm, 20)
         return f"{imm[0]}{imm[10]}{imm[9]}{imm[1:9]}{Assembler.REGISTER_MAP[rd]}1101111"
+
+    @staticmethod
+    def _calc_offset(label: str, lines: list[str], i: int) -> str:
+        if label.isdigit():
+            offset = label
+        
+        else:
+            idx = find_label(label, lines)
+            offset = str((idx - i)*4)
+        
+        return offset
 
     def assemble(self, file_path: str) -> None:
         with open("out.bin", "bw") as out:
@@ -65,14 +85,14 @@ class Assembler():
         
         f = open(file_path, "r")
         lines = f.readlines()
-        lines = [line.strip() for line in lines]
-        lines = [tok.replace(",", "") for tok in (line for line in lines)]
-        f.close()
-        
-        for line in f:
+        lines = [line.split() for line in lines]
+        lines = [line for line in lines if len(line) > 0]
+        for i in range(len(lines)):
+            for j in range(len(lines[i])):
+                lines[i][j] = lines[i][j].replace(",", "")
+
+        for i, toks in enumerate(lines):
             bin = ""
-            toks = line.split()
-            toks = [tok.replace(",", "") for tok in toks]
             if len(toks) == 0:
                 continue
             if toks[0] == "main:":
@@ -136,13 +156,25 @@ class Assembler():
             
             elif toks[0] == "snez":
                 bin = Assembler._r_instruction(toks[1], "zero", toks[2], "010", "0000000")
+            
+            elif toks[0] == "beqz":
+                offset = Assembler._calc_offset(toks[2], lines, i)
+                bin = Assembler._b_instruction("zero", toks[1], offset, "000")
+            
+            elif toks[0] == "j":
+                offset = Assembler._calc_offset(toks[1], lines, i)
+                bin = Assembler._j_instruction("zero", offset)
 
             elif toks[0] == "ret":
                 continue
 
             else:
-                print(f"Unknown instruction: {toks[0]}", file=sys.stderr)
-                sys.exit(1)
+                if toks[0][-1] == ":":
+                    continue
+
+                else:
+                    print(f"Unknown instruction: {toks[0]}", file=sys.stderr)
+                    sys.exit(1)
 
             if len(bin) > 0:
                 out = open("out.bin", "ba")

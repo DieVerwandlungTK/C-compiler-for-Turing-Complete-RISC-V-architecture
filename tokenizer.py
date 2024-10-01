@@ -70,7 +70,7 @@ class Tokenizer():
                 return True
         return False
     
-    def consume_ident(self) -> Token | None:
+    def consume_ident(self):
         if self.tokens[0].type != TokenType.TK_IDENT:
             return None
         

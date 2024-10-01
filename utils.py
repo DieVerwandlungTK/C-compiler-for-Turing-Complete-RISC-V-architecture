@@ -23,3 +23,9 @@ def get_ident(s: str) -> str:
         else:
             break
     return ident
+
+def find_label(label: str, lines: list[list[str]]) -> int:
+    for i, toks in enumerate(lines):
+        if toks[0] == f"{label}:":
+            return i
+    return -1
