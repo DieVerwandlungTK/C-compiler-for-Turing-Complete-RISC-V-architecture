@@ -29,7 +29,7 @@ class Node():
         self.then = then
         self.els = els
         self.init = init
-        self. inc = inc
+        self.inc = inc
         self.labels = labels
 
 class Parser():
@@ -60,7 +60,9 @@ class Parser():
         
         elif self.tokenizer.consume("for"):
             self.tokenizer.expect("(")
+
             node = Node(NodeType.ND_FOR)
+
             node.labels = [f".Lbegin{len(self.labels):03}", f".Lend{len(self.labels):03}"]
             self.labels.append(node.labels[0])
             self.labels.append(node.labels[1])
@@ -77,6 +79,20 @@ class Parser():
                 node.inc = self._expr()
                 self.tokenizer.expect(")")
             
+            node.then = self._stmt()
+            return node
+        
+        elif self.tokenizer.consume("while"):
+            self.tokenizer.expect("(")
+
+            node = Node(NodeType.ND_FOR)
+
+            node.labels = [f".Lbegin{len(self.labels):03}", f".Lend{len(self.labels):03}"]
+            self.labels.append(node.labels[0])
+            self.labels.append(node.labels[1])
+
+            node.cond = self._expr()
+            self.tokenizer.expect(")")
             node.then = self._stmt()
             return node
             

@@ -158,6 +158,40 @@ class Compiler():
                     _gen(node.then)
 
                 f.write(f"{node.labels[0]}:\n")
+                
+                return None
+
+            elif node.node_type == NodeType.ND_FOR:
+                if node.init:
+                    _gen(node.init)
+                f.write(f"{node.labels[0]}:\n")
+
+                if node.cond:
+                    _gen(node.cond)
+                    f.write("   lw t0, 0(sp)\n")
+                    f.write("   addi sp, sp, 16\n")
+                    f.write(f"   beqz t0, {node.labels[1]}\n")
+                
+                _gen(node.then)
+
+                if node.inc:
+                    _gen(node.inc)
+                
+                f.write(f"   j {node.labels[0]}\n")
+                f.write(f"{node.labels[1]}:\n")
+
+                if node.cond:
+                    _gen(node.cond)
+                    f.write("   lw t0, 0(sp)\n")
+                    f.write("   addi sp, sp, 16\n")
+                    f.write(f"   beqz t0, {node.labels[1]}\n")
+                
+                _gen(node.then)
+                if node.inc:
+                    _gen(node.inc)
+                f.write(f"   j {node.labels[0]}\n")
+                f.write(f"{node.labels[1]}:\n")
+                
                 return None
             
             _gen(node.lhs)      # Generate the left node
