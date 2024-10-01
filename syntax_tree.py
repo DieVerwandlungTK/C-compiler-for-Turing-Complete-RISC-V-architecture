@@ -103,6 +103,7 @@ class Parser():
             node.block = []
             while not self.tokenizer.consume("}"):
                 node.block.append(self._stmt())
+            return node
             
         else:
             node = self._expr()
