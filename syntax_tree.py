@@ -14,14 +14,20 @@ class NodeType(Enum):
     ND_LVAR = 9     # Local variable
     ND_ASSIGN = 10  # =
     ND_RETURN = 11  # return
+    ND_IF = 12      # if
 
 class Node():
-    def __init__(self, type, lhs = None, rhs = None, val = None, offset = None) -> None:
+    def __init__(self, type: NodeType, lhs = None, rhs = None, val: int = None, offset: int = None, cond = None, 
+                 then = None, els = None, labels: None | list[str] = None) -> None:
         self.node_type = type
         self.lhs = lhs
         self.rhs = rhs
         self.val = val
         self.offset = offset
+        self.cond = cond
+        self.then = then
+        self.els = els
+        self.labels = labels
 
 class Parser():
     def __init__(self, tokenizer: Tokenizer) -> None:
@@ -29,10 +35,26 @@ class Parser():
         self.code: list[Node] = []
         self.l_vars: list[str] = ["0"]  # Initialize with null variable (for some convenience)
         self.lvar_offsets: list[int] = [0]
+        self.labels: list[str] = []
     
     def _stmt(self) -> Node:
         if self.tokenizer.consume("return"):
             node = Node(NodeType.ND_RETURN, self._expr())
+        
+        elif self.tokenizer.consume("if"):
+            self.tokenizer.expect("(")
+            node = Node(NodeType.ND_IF, cond=self._expr(), labels=[f".Lend{len(self.labels):03}"])
+            self.labels.append(node.labels[0])
+            self.tokenizer.expect(")")
+            node.then = self._stmt()
+
+            if self.tokenizer.consume("else"):
+                node.els = self._stmt()
+                node.labels.append(f".Lelse{len(self.labels):03}")
+                self.labels.append(node.labels[1])
+
+            return node
+
         else:
             node = self._expr()
         self.tokenizer.expect(";")

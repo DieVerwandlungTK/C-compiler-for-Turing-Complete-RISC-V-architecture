@@ -143,6 +143,26 @@ class Compiler():
 
                 return None
             
+            elif node.node_type == NodeType.ND_IF:
+                _gen(node.cond)
+                f.write("   lw t0, 0(sp)\n")
+                f.write("   addi sp, sp, 16\n")
+
+                if node.els:
+                    f.write(f"   beqz t0, {node.labels[1]}\n")
+                    _gen(node.then)
+                    f.write(f"   j {node.labels[0]}\n")
+                    f.write("\n")
+                    f.write(f"{node.labels[1]}:\n")
+                    _gen(node.els)
+
+                else:
+                    f.write(f"   beqz t0, {node.labels[0]}\n")
+                    _gen(node.then)
+
+                f.write(f"{node.labels[0]}:\n")
+                return None
+            
             _gen(node.lhs)      # Generate the left node
             _gen(node.rhs)      # Generate the right node
             _pop_operands()     # Pop the operands from the stack

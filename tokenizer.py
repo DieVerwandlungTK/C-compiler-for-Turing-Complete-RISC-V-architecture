@@ -7,7 +7,7 @@ class TokenType(Enum):
     TK_IDENT = 1
     TK_NUM = 2
     TK_EOF = 3
-    TK_RETURN = 4
+    TK_KEYWORD = 4
 
 class Token():
     def __init__(self, type: TokenType, token_str: str, val = None) -> None:
@@ -16,8 +16,13 @@ class Token():
         self.token_str = token_str
 
 class Tokenizer():
+    KEYWORDS = ["return", "if", "else"]
     def __init__(self) -> None:
         self.tokens: list[Token] = []
+
+    @staticmethod
+    def _is_keyword(s: str) -> bool:
+        return s in Tokenizer.KEYWORDS
 
     def tokenize(self, src: str) -> None:
         i = 0
@@ -42,14 +47,13 @@ class Tokenizer():
                 i += val_len
                 continue
 
-            elif src[i:i+6] == "return" and not src[i+6].isalnum() and src[i+6] != "_":
-                self.tokens.append(Token(TokenType.TK_RETURN, "return"))
-                i += 6
-                continue
-
             elif is_valid_as_head(src[i]):
+
                 ident = get_ident(src[i:])
-                self.tokens.append(Token(TokenType.TK_IDENT, ident))
+                if Tokenizer._is_keyword(ident):
+                    self.tokens.append(Token(TokenType.TK_KEYWORD, ident))
+                else:
+                    self.tokens.append(Token(TokenType.TK_IDENT, ident))
                 i += len(ident)
                 continue
 
@@ -60,7 +64,7 @@ class Tokenizer():
         self.tokens.append(Token(TokenType.TK_EOF, ""))
     
     def consume(self, op: str) -> bool:
-        if self.tokens[0].type == TokenType.TK_RESERVED or self.tokens[0].type == TokenType.TK_RETURN:
+        if self.tokens[0].type == TokenType.TK_RESERVED or self.tokens[0].type == TokenType.TK_KEYWORD:
             if self.tokens[0].token_str == op:
                 self.tokens.pop(0)
                 return True

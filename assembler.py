@@ -62,8 +62,12 @@ class Assembler():
     def assemble(self, file_path: str) -> None:
         with open("out.bin", "bw") as out:
             pass
-
-        with open(file_path, "r") as f:
+        
+        f = open(file_path, "r")
+        lines = f.readlines()
+        lines = [line.strip() for line in lines]
+        lines = [tok.replace(",", "") for tok in (line for line in lines)]
+        f.close()
             for line in f:
                 bin = ""
                 toks = line.split()
