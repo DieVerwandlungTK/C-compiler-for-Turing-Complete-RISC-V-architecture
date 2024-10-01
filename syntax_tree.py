@@ -16,6 +16,7 @@ class NodeType(Enum):
     ND_RETURN = 11  # return
     ND_IF = 12      # if
     ND_FOR = 13     # for
+    ND_BLOCK = 14   # Compound statements (block)
 
 class Node():
     def __init__(self, type, lhs = None, rhs = None, val = None, offset = None, cond = None, 
@@ -31,6 +32,7 @@ class Node():
         self.init = init
         self.inc = inc
         self.labels = labels
+        self.block = None
 
 class Parser():
     def __init__(self, tokenizer: Tokenizer) -> None:
@@ -95,6 +97,12 @@ class Parser():
             self.tokenizer.expect(")")
             node.then = self._stmt()
             return node
+        
+        elif self.tokenizer.consume("{"):
+            node = Node(NodeType.ND_BLOCK)
+            node.block = []
+            while not self.tokenizer.consume("}"):
+                node.block.append(self._stmt())
             
         else:
             node = self._expr()

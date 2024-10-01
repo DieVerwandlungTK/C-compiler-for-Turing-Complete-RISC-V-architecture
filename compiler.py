@@ -158,7 +158,7 @@ class Compiler():
                     _gen(node.then)
 
                 f.write(f"{node.labels[0]}:\n")
-                
+
                 return None
 
             elif node.node_type == NodeType.ND_FOR:
@@ -192,6 +192,15 @@ class Compiler():
                 f.write(f"   j {node.labels[0]}\n")
                 f.write(f"{node.labels[1]}:\n")
                 
+                return None
+            
+            elif node.node_type == NodeType.ND_BLOCK:
+                for stmt in node.block:
+                    _gen(stmt)
+                    f.write("   lw a0, 0(sp)\n")
+                    f.write("   addi sp, sp, 16\n")
+                    f.write("\n")
+
                 return None
             
             _gen(node.lhs)      # Generate the left node
