@@ -15,10 +15,11 @@ class NodeType(Enum):
     ND_ASSIGN = 10  # =
     ND_RETURN = 11  # return
     ND_IF = 12      # if
+    ND_FOR = 13     # for
 
 class Node():
     def __init__(self, type, lhs = None, rhs = None, val = None, offset = None, cond = None, 
-                 then = None, els = None, labels = None) -> None:
+                 then = None, els = None, labels = None, init = None, inc = None) -> None:
         self.node_type = type
         self.lhs = lhs
         self.rhs = rhs
@@ -27,6 +28,8 @@ class Node():
         self.cond = cond
         self.then = then
         self.els = els
+        self.init = init
+        self. inc = inc
         self.labels = labels
 
 class Parser():
@@ -50,11 +53,33 @@ class Parser():
 
             if self.tokenizer.consume("else"):
                 node.els = self._stmt()
-                node.labels.append(f".Lelse{len(self.labels):03}")
+                node.labels.append(f".Lelse{(len(self.labels) - 1):03}")
                 self.labels.append(node.labels[1])
 
             return node
+        
+        elif self.tokenizer.consume("for"):
+            self.tokenizer.expect("(")
+            node = Node(NodeType.ND_FOR)
+            node.labels = [f".Lbegin{len(self.labels):03}", f".Lend{len(self.labels):03}"]
+            self.labels.append(node.labels[0])
+            self.labels.append(node.labels[1])
 
+            if not self.tokenizer.consume(";"):
+                node.init = self._expr()
+                self.tokenizer.expect(";")
+
+            if not self.tokenizer.consume(";"):
+                node.cond = self._expr()
+                self.tokenizer.expect(";")
+            
+            if not self.tokenizer.consume(")"):
+                node.inc = self._expr()
+                self.tokenizer.expect(")")
+            
+            node.then = self._stmt()
+            return node
+            
         else:
             node = self._expr()
         self.tokenizer.expect(";")

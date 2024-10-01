@@ -16,7 +16,7 @@ class Token():
         self.token_str = token_str
 
 class Tokenizer():
-    KEYWORDS = ["return", "if", "else"]
+    KEYWORDS = ["return", "if", "else", "while", "for"]
     def __init__(self) -> None:
         self.tokens: list[Token] = []
 
@@ -48,7 +48,6 @@ class Tokenizer():
                 continue
 
             elif is_valid_as_head(src[i]):
-
                 ident = get_ident(src[i:])
                 if Tokenizer._is_keyword(ident):
                     self.tokens.append(Token(TokenType.TK_KEYWORD, ident))
