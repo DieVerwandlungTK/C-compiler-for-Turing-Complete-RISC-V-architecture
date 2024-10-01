@@ -25,7 +25,7 @@ class Compiler():
 
         self.parser = parser
     
-    def compile(self, file_path: str) -> None:
+    def compile(self, file_path: str, verbose: bool = False) -> None:
         """ Compile the given syntax tree into a RISC-V assembly code
 
         Args:
@@ -40,10 +40,19 @@ class Compiler():
         f.close()
 
         f = open(file_path, "a")
+
         f.write("main:\n")
+
+        if verbose:
+            f.write("# initialize sp and fp\n")
+
         f.write("   lui t0, 16\n")
         f.write("   add sp, sp, t0\n")
         f.write("   add fp, fp, t0\n")
+
+        if verbose:
+            f.write("# allocate memory for local variables\n")
+
         f.write(f"   addi sp, sp, -{(self.parser.lvar_offsets[-1]//16 + 1)*16}\n")
         f.write("\n")
 
@@ -59,6 +68,9 @@ class Compiler():
                 None: This function does not return anything.
 
             """
+
+            if verbose:
+                f.write("# pop operands from the stack\n")
 
             f.write("   lw t0, 0(sp)\n")
             f.write("   lw t1, 16(sp)\n")
@@ -79,12 +91,19 @@ class Compiler():
 
             """
 
+            if verbose:
+                f.write("# push the result to the stack\n")
+
             f.write("   addi sp, sp, -16\n")
             f.write("   sw t0, 0(sp)\n")
         
         def _gen_lval(node: Node) -> None:
             if node.node_type != NodeType.ND_LVAR:
                 sys.exit(1)
+            
+            if verbose:
+                f.write("# calculate the address of the local variable\n")
+
             f.write(f"   addi t0, fp, {node.offset}\n")
             _push_result()
             f.write("\n")
@@ -103,6 +122,9 @@ class Compiler():
             """
 
             if node.node_type == NodeType.ND_NUM:
+                if verbose:
+                    f.write("# load the number to the stack\n")
+
                 f.write(f"   li t0, {node.val}\n")
                 _push_result()
                 f.write("\n")
@@ -110,7 +132,14 @@ class Compiler():
                 return None
                 
             elif node.node_type == NodeType.ND_LVAR:
+                if verbose:
+                    f.write("# local variable access\n")
+
                 _gen_lval(node)
+
+                if verbose:
+                    f.write("# load the value of the local variable to the stack\n")
+
                 f.write("   lw t0, 0(sp)\n")
                 f.write("   lw t0, 0(t0)\n")
                 f.write("   sw t0, 0(sp)\n")
@@ -119,9 +148,16 @@ class Compiler():
                 return None
             
             elif node.node_type == NodeType.ND_ASSIGN:
+                if verbose:
+                    f.write("# assign the value to the local variable\n")
+
                 _gen_lval(node.lhs)
                 _gen(node.rhs)
                 _pop_operands()
+
+                if verbose:
+                    f.write("# store the value to the local variable\n")
+
                 f.write("   sw t0, 0(t1)\n")
                 _push_result()
                 f.write("\n")
@@ -129,7 +165,14 @@ class Compiler():
                 return None
             
             elif node.node_type == NodeType.ND_RETURN:
+                if verbose:
+                    f.write("# return\n")
+
                 _gen(node.lhs)
+
+                if verbose:
+                    f.write("# return the value\n")
+
                 f.write("   lw a0, 0(sp)\n")
                 f.write("   addi sp, sp, 16\n")
                 f.write("   mv sp, fp\n")
@@ -141,20 +184,39 @@ class Compiler():
                 return None
             
             elif node.node_type == NodeType.ND_IF:
+                if verbose:
+                    f.write("# if statement\n")
+                    f.write("# condition\n")
+
                 _gen(node.cond)
                 f.write("   lw t0, 0(sp)\n")
                 f.write("   addi sp, sp, 16\n")
 
                 if node.els:
+                    if verbose:
+                        f.write("# if-else statement\n")
+
                     f.write(f"   beqz t0, {node.labels[1]}\n")
+
+                    if verbose:
+                        f.write("# then\n")
+
                     _gen(node.then)
                     f.write(f"   j {node.labels[0]}\n")
                     f.write("\n")
                     f.write(f"{node.labels[1]}:\n")
+
+                    if verbose:
+                        f.write("# else\n")
+
                     _gen(node.els)
 
                 else:
                     f.write(f"   beqz t0, {node.labels[0]}\n")
+
+                    if verbose:
+                        f.write("# then\n")
+
                     _gen(node.then)
 
                 f.write(f"{node.labels[0]}:\n")
@@ -162,39 +224,69 @@ class Compiler():
                 return None
 
             elif node.node_type == NodeType.ND_FOR:
+                if verbose:
+                    f.write("# for statement\n")
+
                 if node.init:
+                    if verbose:
+                        f.write("# init\n")
+
                     _gen(node.init)
+
                 f.write(f"{node.labels[0]}:\n")
 
                 if node.cond:
+                    if verbose:
+                        f.write("# condition\n")
+
                     _gen(node.cond)
                     f.write("   lw t0, 0(sp)\n")
                     f.write("   addi sp, sp, 16\n")
                     f.write(f"   beqz t0, {node.labels[1]}\n")
                 
+                if verbose:
+                    f.write("# then\n")
+
                 _gen(node.then)
 
                 if node.inc:
+                    if verbose:
+                        f.write("# increment\n")
+
                     _gen(node.inc)
                 
                 f.write(f"   j {node.labels[0]}\n")
                 f.write(f"{node.labels[1]}:\n")
 
                 if node.cond:
+                    if verbose:
+                        f.write("# end of for statement\n")
+
                     _gen(node.cond)
                     f.write("   lw t0, 0(sp)\n")
                     f.write("   addi sp, sp, 16\n")
                     f.write(f"   beqz t0, {node.labels[1]}\n")
                 
+                if verbose:
+                    f.write("# then\n")
+
                 _gen(node.then)
+
                 if node.inc:
+                    if verbose:
+                        f.write("# increment\n")
+
                     _gen(node.inc)
+
                 f.write(f"   j {node.labels[0]}\n")
                 f.write(f"{node.labels[1]}:\n")
                 
                 return None
             
             elif node.node_type == NodeType.ND_BLOCK:
+                if verbose:
+                    f.write("# block statement\n")
+                    
                 for stmt in node.block:
                     _gen(stmt)
                     f.write("   lw a0, 0(sp)\n")
@@ -207,6 +299,9 @@ class Compiler():
             _gen(node.rhs)      # Generate the right node
             _pop_operands()     # Pop the operands from the stack
             # left node is in t1, right node is in t0
+
+            if verbose:
+                f.write("# binary operation\n")
 
             if node.node_type == NodeType.ND_ADD:         
                 f.write("   add t0, t1, t0\n")  # Add the operands
@@ -266,4 +361,4 @@ if __name__ == "__main__":
     parser = Parser(tokenizer)
     parser.parse()
     compiler = Compiler(parser)
-    compiler.compile(args[2])
+    compiler.compile(args[2], True)

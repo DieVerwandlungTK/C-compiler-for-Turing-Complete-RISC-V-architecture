@@ -172,6 +172,9 @@ class Assembler():
             elif toks[0] == "ret":
                 continue
 
+            elif toks[0] == "#":
+                continue
+
             else:
                 if toks[0][-1] == ":":
                     continue
