@@ -68,86 +68,86 @@ class Assembler():
         lines = [line.strip() for line in lines]
         lines = [tok.replace(",", "") for tok in (line for line in lines)]
         f.close()
-            for line in f:
-                bin = ""
-                toks = line.split()
-                toks = [tok.replace(",", "") for tok in toks]
-                if len(toks) == 0:
-                    continue
+        
+        for line in f:
+            bin = ""
+            toks = line.split()
+            toks = [tok.replace(",", "") for tok in toks]
+            if len(toks) == 0:
+                continue
+            if toks[0] == "main:":
+                continue
+            
+            elif toks[0] == "addi":
+                bin = Assembler._arithmetic_i_instruction(toks[1], toks[2], toks[3], "000")
+            
+            elif toks[0] == "ori":
+                bin = Assembler._arithmetic_i_instruction(toks[1], toks[2], toks[3], "110")
+            
+            elif toks[0] == "add":
+                bin = Assembler._r_instruction(toks[1], toks[2], toks[3], "000", "0000000")
+            
+            elif toks[0] == "sub":
+                bin = Assembler._r_instruction(toks[1], toks[2], toks[3], "000", "0100000")
+            
+            elif toks[0] == "slt":
+                bin = Assembler._r_instruction(toks[1], toks[2], toks[3], "010", "0000000")
+            
+            elif toks[0] == "sltu":
+                bin = Assembler._r_instruction(toks[1], toks[2], toks[3], "011", "0000000")
+            
+            elif toks[0] == "xor":
+                bin = Assembler._r_instruction(toks[1], toks[2], toks[3], "100", "0000000")
+            
+            elif toks[0] == "or":
+                bin = Assembler._r_instruction(toks[1], toks[2], toks[3], "110", "0000000")
+            
+            elif toks[0] == "lui":
+                bin = Assembler._lui_u_instruction(toks[1], toks[2])
+            
+            elif toks[0] == "lw":
+                imm, val_len = strtol(toks[2])
+                rest = toks[2][val_len:]
+                rs1 = rest.replace("(", "").replace(")", "")
+                bin = Assembler._load_i_instruction(toks[1], rs1, imm, "010")
+            
+            elif toks[0] == "sw":
+                imm, val_len = strtol(toks[2])
+                rest = toks[2][val_len:]
+                rs1 = rest.replace("(", "").replace(")", "")
+                bin = Assembler._s_instruction(toks[1], rs1, imm, "010")
+            
+            # M-extension
+            elif toks[0] == "mul":
+                bin = Assembler._r_instruction(toks[1], toks[2], toks[3], "000", "0000001")
+            
+            elif toks[0] == "div":
+                bin = Assembler._r_instruction(toks[1], toks[2], toks[3], "100", "0000001")
+            
+            # pseudo instructions
+            elif toks[0] == "li":
+                bin = Assembler._arithmetic_i_instruction(toks[1], "zero", toks[2], "000")
+            
+            elif toks[0] == "mv":
+                bin = Assembler._arithmetic_i_instruction(toks[1], toks[2], "0", "000")
 
-                if toks[0] == "main:":
-                    continue
-                
-                elif toks[0] == "addi":
-                    bin = Assembler._arithmetic_i_instruction(toks[1], toks[2], toks[3], "000")
-                
-                elif toks[0] == "ori":
-                    bin = Assembler._arithmetic_i_instruction(toks[1], toks[2], toks[3], "110")
-                
-                elif toks[0] == "add":
-                    bin = Assembler._r_instruction(toks[1], toks[2], toks[3], "000", "0000000")
-                
-                elif toks[0] == "sub":
-                    bin = Assembler._r_instruction(toks[1], toks[2], toks[3], "000", "0100000")
-                
-                elif toks[0] == "slt":
-                    bin = Assembler._r_instruction(toks[1], toks[2], toks[3], "010", "0000000")
-                
-                elif toks[0] == "sltu":
-                    bin = Assembler._r_instruction(toks[1], toks[2], toks[3], "011", "0000000")
-                
-                elif toks[0] == "xor":
-                    bin = Assembler._r_instruction(toks[1], toks[2], toks[3], "100", "0000000")
-                
-                elif toks[0] == "or":
-                    bin = Assembler._r_instruction(toks[1], toks[2], toks[3], "110", "0000000")
-                
-                elif toks[0] == "lui":
-                    bin = Assembler._lui_u_instruction(toks[1], toks[2])
-                
-                elif toks[0] == "lw":
-                    imm, val_len = strtol(toks[2])
-                    rest = toks[2][val_len:]
-                    rs1 = rest.replace("(", "").replace(")", "")
-                    bin = Assembler._load_i_instruction(toks[1], rs1, imm, "010")
-                
-                elif toks[0] == "sw":
-                    imm, val_len = strtol(toks[2])
-                    rest = toks[2][val_len:]
-                    rs1 = rest.replace("(", "").replace(")", "")
-                    bin = Assembler._s_instruction(toks[1], rs1, imm, "010")
-                
-                # M-extension
-                elif toks[0] == "mul":
-                    bin = Assembler._r_instruction(toks[1], toks[2], toks[3], "000", "0000001")
-                
-                elif toks[0] == "div":
-                    bin = Assembler._r_instruction(toks[1], toks[2], toks[3], "100", "0000001")
-                
-                # pseudo instructions
-                elif toks[0] == "li":
-                    bin = Assembler._arithmetic_i_instruction(toks[1], "zero", toks[2], "000")
-                
-                elif toks[0] == "mv":
-                    bin = Assembler._arithmetic_i_instruction(toks[1], toks[2], "0", "000")
+            elif toks[0] == "seqz":
+                bin = Assembler._arithmetic_i_instruction(toks[1], "zero", "1", "011")
+            
+            elif toks[0] == "snez":
+                bin = Assembler._r_instruction(toks[1], "zero", toks[2], "010", "0000000")
 
-                elif toks[0] == "seqz":
-                    bin = Assembler._arithmetic_i_instruction(toks[1], "zero", "1", "011")
-                
-                elif toks[0] == "snez":
-                    bin = Assembler._r_instruction(toks[1], "zero", toks[2], "010", "0000000")
+            elif toks[0] == "ret":
+                continue
 
-                elif toks[0] == "ret":
-                    continue
+            else:
+                print(f"Unknown instruction: {toks[0]}", file=sys.stderr)
+                sys.exit(1)
 
-                else:
-                    print(f"Unknown instruction: {toks[0]}", file=sys.stderr)
-                    sys.exit(1)
-
-                if len(bin) > 0:
-                    out = open("out.bin", "ba")
-                    out.write(int(bin, 2).to_bytes(len(bin) // 8, byteorder="big"))
-                    out.close()
+            if len(bin) > 0:
+                out = open("out.bin", "ba")
+                out.write(int(bin, 2).to_bytes(len(bin) // 8, byteorder="big"))
+                out.close()
                 
 
 
